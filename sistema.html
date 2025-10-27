@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Envio Masivo - Gestion de Cartera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .top-bar {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info {
+            color: #ff6b35;
+            font-weight: 600;
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #1f1f1f;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 2px solid #ff6b35;
+        }
+        
+        h1 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+        
+        .subtitle {
+            color: #b0b0b0;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-link {
+            padding: 8px 16px;
+            background: #444;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .btn-link:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #888;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: #ff6b35;
+        }
+        
+        .tab.active {
+            color: #ff6b35;
+            border-bottom-color: #ff6b35;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ff6b35;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #2a2a2a;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            background: #333;
+            border-color: #ff8c5a;
+            transform: scale(1.02);
+        }
+        
+        .upload-area.dragover {
+            background: #3a3a3a;
+            border-color: #ffaa7a;
+            transform: scale(1.05);
+        }
+        
+        .upload-area.uploading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ff6b35;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #2a2a2a;
+            color: #fff;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #444;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: #555;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid;
+        }
+        
+        .alert.success {
+            background: #1a3d1a;
+            color: #4ade80;
+            border-color: #4ade80;
+        }
+        
+        .alert.error {
+            background: #3d1a1a;
+            color: #f87171;
+            border-color: #f87171;
+        }
+        
+        .alert.info {
+            background: #1a2a3d;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+        
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        .preview-table th {
+            background: #ff6b35;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .preview-table td {
+            color: #ccc;
+        }
+        
+        .preview-table tr:hover {
+            background: #333;
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .progress-container.show {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #2a2a2a;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #333;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35 0%, #ff8c5a 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #ff6b35;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .variables-info {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border-left: 4px solid #ff6b35;
+            color: #ccc;
+        }
+        
+        .variables-info code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ff6b35;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .variables-info a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .variables-info a:hover {
+            text-decoration: underline;
+        }
+        
+        #logEnvio {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            border: 2px solid #333;
+        }
+        
+        #logEnvio::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #logEnvio::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        
+        #logEnvio::-webkit-scrollbar-thumb {
+            background: #ff6b35;
+            border-radius: 4px;
+        }
+        
+        small {
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="user-info">
+            Usuario: <span id="currentUser"></span>
+        </div>
+        <button class="btn-logout" onclick="logout()">Cerrar Sesion</button>
+    </div>
+
+    <div class="container">
+        <h1>Sistema de Envío Masivo - Gestión de Cartera</h1>
+        <p class="subtitle">Carga un archivo Excel y envia mensajes automaticos de cobro a todos tus clientes</p>
+        
+        <div class="header-actions">
+            <a href="test_sistema.php" target="_blank" class="btn-link">Diagnosticar Sistema</a>
+            <a href="generar_plantilla.php" download class="btn-link">Descargar plantilla Excel</a>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('cargar')">1. Cargar Excel</button>
+            <button class="tab" onclick="cambiarTab('mensaje')">2. Configurar Mensaje</button>
+            <button class="tab" onclick="cambiarTab('enviar')">3. Enviar</button>
+        </div>
+        
+        <div id="alertBox" class="alert"></div>
+        
+        <!-- TAB 1: CARGAR EXCEL -->
+        <div id="tab-cargar" class="tab-content active">
+            <div class="upload-area" id="uploadArea">
+                <h2 style="color: #ff6b35; margin-bottom: 10px;">Arrastra tu archivo Excel aqui</h2>
+                <p style="color: #888; margin-bottom: 15px;">o haz clic para seleccionar</p>
+                <p style="font-size: 12px; color: #666;">Formatos: .xlsx, .xls, .csv</p>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+            </div>
+            
+            <div id="previewSection" style="display: none;">
+                <h3 style="margin-bottom: 15px; color: #ff6b35;">Vista Previa de Datos</h3>
+                <div class="stats" id="statsSection"></div>
+                <div style="overflow-x: auto;">
+                    <table class="preview-table" id="previewTable"></table>
+                </div>
+                <button class="btn" onclick="cambiarTab('mensaje')" style="margin-top: 20px;">
+                    Continuar con el Mensaje &rarr;
+                </button>
+            </div>
+            
+            <div class="variables-info">
+                <strong>Formato requerido del Excel:</strong><br>
+                Tu archivo debe tener estas columnas:<br>
+                • <code>nombre</code> - Nombre del contacto<br>
+                • <code>telefono</code> - Número de WhatsApp (con código país, ej: 573001234567)<br>
+                • <code>email</code> - Correo electrónico<br>
+                • <code>valor_pagar</code> - Monto que debe pagar (ej: 150000)<br>
+                <br>
+                <a href="generar_plantilla.php" download>Descargar plantilla de ejemplo</a>
+            </div>
+        </div>
+        
+        <!-- TAB 2: CONFIGURAR MENSAJE -->
+        <div id="tab-mensaje" class="tab-content">
+            <form id="messageForm">
+                <div class="variables-info">
+                    <strong>Variables personalizadas:</strong><br>
+                    Usa estas variables en tu mensaje y se reemplazaran automaticamente:<br>
+                    • <code>{nombre}</code> - Nombre del contacto<br>
+                    • <code>{telefono}</code> - Teléfono del contacto<br>
+                    • <code>{email}</code> - Email del contacto<br>
+                    • <code>{valor_pagar}</code> - Monto a pagar (se formatea con $ automaticamente)<br>
+                    <br>
+                    <strong>Ejemplo:</strong> "Hola <code>{nombre}</code>, tienes pendiente un pago de <code>${valor_pagar}</code>"
+                </div>
+                
+                <div class="form-group">
+                    <label>Asunto del Email</label>
+                    <input type="text" id="asuntoMasivo" value="Recordatorio de Pago Pendiente - {nombre}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Mensaje</label>
+                    <textarea id="mensajeMasivo" required placeholder="Escribe tu mensaje aqui...">Hola {nombre},
+
+Le recordamos que tiene un saldo pendiente de ${valor_pagar} en su cuenta.
+
+Por favor, comuníquese con nosotros al {telefono} para coordinar su pago.
+
+Gracias por su atencion.
+
+Atentamente,
+Departamento de Cartera</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Intervalo entre mensajes (segundos)</label>
+                    <input type="number" id="intervalo" value="5" min="2" max="60" required>
+                    <small>Recomendado: 5-10 segundos para evitar ser bloqueado</small>
+                </div>
+                
+                <button type="button" class="btn" onclick="cambiarTab('enviar')">
+                    Continuar al Envio &rarr;
+                </button>
+            </form>
+        </div>
+        
+        <!-- TAB 3: ENVIAR -->
+        <div id="tab-enviar" class="tab-content">
+            <div class="stats" id="statsEnvio">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalContactos">0</div>
+                    <div class="stat-label">Total Contactos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="enviados">0</div>
+                    <div class="stat-label">Enviados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="errores">0</div>
+                    <div class="stat-label">Errores</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalValor">$0</div>
+                    <div class="stat-label">Total a Cobrar</div>
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
+                </div>
+            </div>
+            
+            <div id="logEnvio"></div>
+            
+            <button class="btn" id="btnIniciarEnvio" onclick="iniciarEnvioMasivo()">
+                Iniciar Envio Masivo
+            </button>
+            
+            <button class="btn btn-secondary" id="btnDetener" onclick="detenerEnvio()" style="display: none;">
+                Detener Envio
+            </button>
+        </div>
+    </div>
+
+    <!-- Libreria para leer Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script>
+        // Verificar autenticacion
+        if (localStorage.getItem('loggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('currentUser').textContent = localStorage.getItem('username') || 'Usuario';
+        
+        function logout() {
+            localStorage.removeItem('loggedIn');
+            localStorage.removeItem('username');
+            window.location.href = 'login.html';
+        }
+        
+        let contactosData = [];
+        let enviando = false;
+        
+        // Configuracion de eventos de carga de archivo
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        // Click para abrir selector de archivos
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target === uploadArea || e.target.tagName !== 'INPUT') {
+                fileInput.click();
+            }
+        });
+        
+        // Drag and Drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file) {
+                    procesarArchivo(file);
+                }
+            }
+        });
+        
+        // Cambio de archivo en input
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                procesarArchivo(file);
+            }
+        });
+        
+        function procesarArchivo(file) {
+            // Validar tipo de archivo
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel', // .xls
+                'text/csv' // .csv
+            ];
+            
+            const validExtensions = ['.xlsx', '.xls', '.csv'];
+            const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            
+            if (!validExtensions.includes(fileExtension)) {
+                showAlert('Formato de archivo no valido. Usa .xlsx, .xls o .csv', 'error');
+                return;
+            }
+            
+            uploadArea.classList.add('uploading');
+            showAlert('Cargando archivo...', 'info');
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    uploadArea.classList.remove('uploading');
+                    
+                    if (jsonData.length === 0) {
+                        showAlert('El archivo esta vacio', 'error');
+                        return;
+                    }
+                    
+                    // Validar columnas requeridas
+                    const requiredColumns = ['nombre', 'telefono', 'email', 'valor_pagar'];
+                    const firstRow = jsonData[0];
+                    const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+                    
+                    if (missingColumns.length > 0) {
+                        showAlert('Faltan columnas requeridas: ' + missingColumns.join(', '), 'error');
+                        return;
+                    }
+                    
+                    contactosData = jsonData;
+                    mostrarVistaPrevia(jsonData);
+                    showAlert(`Archivo cargado exitosamente: ${jsonData.length} contactos encontrados`, 'success');
+                    
+                    // Limpiar input para permitir recargar el mismo archivo
+                    fileInput.value = '';
+                    
+                } catch (error) {
+                    uploadArea.classList.remove('uploading');
+                    showAlert('Error al leer el archivo: ' + error.message, 'error');
+                    console.error('Error:', error);
+                }
+            };
+            
+            reader.onerror = function() {
+                uploadArea.classList.remove('uploading');
+                showAlert('Error al leer el archivo', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function formatearMoneda(valor) {
+            if (!valor) return '$0';
+            const numero = parseFloat(valor);
+            return '$' + numero.toLocaleString('es-CO',{minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+        
+        function mostrarVistaPrevia(data) {
+            const previewSection = document.getElementById('previewSection');
+            const statsSection = document.getElementById('statsSection');
+            const table = document.getElementById('previewTable');
+            
+            // Estadisticas
+            const conTelefono = data.filter(d => d.telefono).length;
+            const conEmail = data.filter(d => d.email).length;
+            const totalValor = data.reduce((sum, d) => sum + (parseFloat(d.valor_pagar) || 0), 0);
+            
+            statsSection.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${data.length}</div>
+                    <div class="stat-label">Total Contactos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${conTelefono}</div>
+                    <div class="stat-label">Con WhatsApp</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${conEmail}</div>
+                    <div class="stat-label">Con Email</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${formatearMoneda(totalValor)}</div>
+                    <div class="stat-label">Total a Cobrar</div>
+                </div>
+            `;
+            
+            // Tabla (primeros 10 registros)
+            const headers = Object.keys(data[0]);
+            let tableHTML = '<thead><tr>';
+            headers.forEach(h => {
+                const headerName = h === 'valor_pagar' ? 'Valor a Pagar' : h.charAt(0).toUpperCase() + h.slice(1);
+                tableHTML += `<th>${headerName}</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+            
+            data.slice(0, 10).forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(h => {
+                    const value = h === 'valor_pagar' ? formatearMoneda(row[h]) : (row[h] || '-');
+                    tableHTML += `<td>${value}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            
+            if (data.length > 10) {
+                tableHTML += `<tr><td colspan="${headers.length}" style="text-align:center; color:#666;">... y ${data.length - 10} registros mas</td></tr>`;
+            }
+            
+            tableHTML += '</tbody>';
+            table.innerHTML = tableHTML;
+            previewSection.style.display = 'block';
+        }
+        
+        function cambiarTab(tab) {
+            // Validar antes de cambiar
+            if (tab === 'mensaje' && contactosData.length === 0) {
+                showAlert('Primero debes cargar un archivo Excel', 'error');
+                return;
+            }
+            
+            if (tab === 'enviar') {
+                const mensaje = document.getElementById('mensajeMasivo').value;
+                if (!mensaje) {
+                    showAlert('Debes escribir un mensaje', 'error');
+                    return;
+                }
+                
+                // Actualizar estadisticas de envio
+                const totalValor = contactosData.reduce((sum, d) => sum + (parseFloat(d.valor_pagar) || 0), 0);
+                document.getElementById('totalContactos').textContent = contactosData.length;
+                document.getElementById('enviados').textContent = '0';
+                document.getElementById('errores').textContent = '0';
+                document.getElementById('totalValor').textContent = formatearMoneda(totalValor);
+            }
+            
+            // Cambiar tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            const tabIndex = tab === 'cargar' ? 0 : tab === 'mensaje' ? 1 : 2;
+            tabButtons[tabIndex].classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+        
+        async function iniciarEnvioMasivo() {
+            if (contactosData.length === 0) {
+                showAlert('No hay contactos para enviar', 'error');
+                return;
+            }
+            
+            const asunto = document.getElementById('asuntoMasivo').value;
+            const mensajeTemplate = document.getElementById('mensajeMasivo').value;
+            const intervalo = parseInt(document.getElementById('intervalo').value) * 1000;
+            
+            enviando = true;
+            document.getElementById('btnIniciarEnvio').disabled = true;
+            document.getElementById('btnDetener').style.display = 'block';
+            document.getElementById('progressContainer').classList.add('show');
+            document.getElementById('logEnvio').style.display = 'block';
+            
+            let enviados = 0;
+            let errores = 0;
+            
+            for (let i = 0; i < contactosData.length && enviando; i++) {
+                const contacto = contactosData[i];
+                const progreso = Math.round(((i + 1) / contactosData.length) * 100);
+                
+                // Reemplazar variables en el mensaje
+                let mensajePersonalizado = mensajeTemplate
+                    .replace(/{nombre}/g, contacto.nombre || '')
+                    .replace(/{telefono}/g, contacto.telefono || '')
+                    .replace(/{email}/g, contacto.email || '')
+                    .replace(/{valor_pagar}/g, formatearMoneda(contacto.valor_pagar));
+                
+                let asuntoPersonalizado = asunto
+                    .replace(/{nombre}/g, contacto.nombre || '')
+                    .replace(/{valor_pagar}/g, formatearMoneda(contacto.valor_pagar));
+                
+                try {
+                    const formData = new FormData();
+                    if (contacto.telefono) formData.append('canales[]', 'whatsapp');
+                    if (contacto.email) formData.append('canales[]', 'email');
+                    formData.append('telefono', contacto.telefono || '');
+                    formData.append('email', contacto.email || '');
+                    formData.append('asunto', asuntoPersonalizado);
+                    formData.append('mensaje', mensajePersonalizado);
+                    
+                    const response = await fetch('api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const responseText = await response.text();
+                    
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (jsonError) {
+                        console.error('Respuesta no es JSON valido:', responseText);
+                        throw new Error('El servidor devolvio una respuesta invalida');
+                    }
+                    
+                    if (result.success) {
+                        enviados++;
+                        agregarLog(`OK - Enviado a ${contacto.nombre || contacto.email} - ${formatearMoneda(contacto.valor_pagar)}`, 'success');
+                    } else {
+                        errores++;
+                        agregarLog(`ERROR - ${contacto.nombre || contacto.email}: ${result.mensaje}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    errores++;
+                    console.error('Error completo:', error);
+                    agregarLog(`ERROR - ${contacto.nombre || contacto.email}: ${error.message}`, 'error');
+                }
+                
+                // Actualizar UI
+                document.getElementById('enviados').textContent = enviados;
+                document.getElementById('errores').textContent = errores;
+                document.getElementById('progressFill').style.width = progreso + '%';
+                document.getElementById('progressFill').textContent = progreso + '%';
+                
+                // Esperar intervalo antes del siguiente
+                if (i < contactosData.length - 1 && enviando) {
+                    await new Promise(resolve => setTimeout(resolve, intervalo));
+                }
+            }
+            
+            enviando = false;
+            document.getElementById('btnIniciarEnvio').disabled = false;
+            document.getElementById('btnDetener').style.display = 'none';
+            
+            showAlert(`Envio completado: ${enviados} exitosos, ${errores} errores`, enviados > 0 ? 'success' : 'error');
+        }
+        
+        function detenerEnvio() {
+            enviando = false;
+            document.getElementById('btnIniciarEnvio').disabled = false;
+            document.getElementById('btnDetener').style.display = 'none';
+            showAlert('Envio detenido', 'info');
+        }
+        
+        function agregarLog(mensaje, tipo) {
+            const log = document.getElementById('logEnvio');
+            const hora = new Date().toLocaleTimeString();
+            const color = tipo === 'success' ? '#4ade80' : '#f87171';
+            log.innerHTML = `<div style="color: ${color}; margin-bottom: 5px;">[${hora}] ${mensaje}</div>` + log.innerHTML;
+        }
+        
+        function showAlert(mensaje, tipo) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = mensaje;
+            alertBox.className = 'alert ' + tipo + ' show';
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
